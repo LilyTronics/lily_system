@@ -13,13 +13,20 @@ class ControllerMain:
     def __init__(self, window_title):
         self._view = ViewMain(window_title)
         self._view.Show()
+
+        self._view.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self._on_tree_item_activate, id=self._view.ID_TREE)
         self._lily_system = LilySystem(self._on_lily_system_event)
 
     def _on_lily_system_event(self, racks):
-        for key in sorted(racks):
-            self._view.add_rack(key)
-            for module in sorted(racks[key], key=lambda m: m["slot"]):
-                self._view.add_module(key, f"{module["slot"]} - {module["name"]}")
+        for rack in sorted(racks, key=lambda r: r["port"]):
+            rack_id = f"Rack [{rack["port"]}]"
+            self._view.add_rack(rack_id)
+            for module in sorted(rack["modules"], key=lambda m: m["slot"]):
+                module_id = f"{module["slot"]} - {module["name"]}"
+                self._view.add_module(rack_id, module_id, (rack["port"], module["slot"]))
+
+    def _on_tree_item_activate(self, event):
+        print(self._view.get_item_data(event.GetItem()))
 
 
 if __name__ == "__main__":
