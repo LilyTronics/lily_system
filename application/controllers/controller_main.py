@@ -15,8 +15,11 @@ class ControllerMain:
         self._view.Show()
         self._lily_system = LilySystem(self._on_lily_system_event)
 
-    def _on_lily_system_event(self, event_type):
-        print(event_type)
+    def _on_lily_system_event(self, racks):
+        for key in sorted(racks):
+            self._view.add_rack(key)
+            for module in sorted(racks[key], key=lambda m: m["slot"]):
+                self._view.add_module(key, f"{module["slot"]} - {module["name"]}")
 
 
 if __name__ == "__main__":
