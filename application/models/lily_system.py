@@ -15,6 +15,7 @@ class LilySystem:
 
     def __init__(self, event_handler):
         self._event_handler = event_handler
+        self._lock = threading.RLock()
         self._stop_event = threading.Event()
         self._thread = threading.Thread(target=self._run)
         self._thread.daemon = True
@@ -63,6 +64,11 @@ class LilySystem:
         self._event_handler(copy.deepcopy(self._racks))
         while not self._stop_event.is_set():
             time.sleep(0.1)
+
+    def get_racks(self):
+        with self._lock:
+            racks = copy.deepcopy(self._racks)
+        return racks
 
 
 if __name__ == "__main__":

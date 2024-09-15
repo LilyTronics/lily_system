@@ -26,7 +26,13 @@ class ControllerMain:
                 self._view.add_module(rack_id, module_id, (rack["port"], module["slot"]))
 
     def _on_tree_item_activate(self, event):
-        print(self._view.get_item_data(event.GetItem()))
+        location = self._view.get_item_data(event.GetItem())
+        if location is not None:
+            matches = list(filter(lambda r: r["port"] == location[0], self._lily_system.get_racks()))
+            if len(matches) == 1:
+                matches = list(filter(lambda m: m["slot"] == location[1], matches[0]["modules"]))
+                print(matches)
+        event.Skip()
 
 
 if __name__ == "__main__":
