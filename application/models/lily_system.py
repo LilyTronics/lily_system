@@ -11,7 +11,7 @@ import time
 
 class LilySystem:
 
-    _racks = {}
+    _racks = []
 
     def __init__(self, event_handler):
         self._event_handler = event_handler
@@ -26,30 +26,40 @@ class LilySystem:
             self._thread.join()
 
     def _run(self):
-        self._racks["Rack [COM3]"] = [
+        self._racks.append(
             {
-                "id": "047C-0001",
-                "slot": 3,
-                "name": "Lily System signal generator"
-            },
-            {
-                "id": "047C-0001",
-                "slot": 1,
-                "name": "Lily System Controller module"
+                "port": "COM3",
+                "modules": [
+                    {
+                        "id": "047C-0002",
+                        "slot": 3,
+                        "name": "Lily System signal generator"
+                    },
+                    {
+                        "id": "047C-0001",
+                        "slot": 1,
+                        "name": "Lily System Controller module"
+                    }
+                ]
             }
-        ]
-        self._racks["Rack [COM1]"] = [
+        )
+        self._racks.append(
             {
-                "id": "047C-0001",
-                "slot": 5,
-                "name": "Lily System analyzer"
-            },
-            {
-                "id": "047C-0001",
-                "slot": 1,
-                "name": "Lily System Controller module"
+                "port": "COM1",
+                "modules": [
+                    {
+                        "id": "047C-0003",
+                        "slot": 5,
+                        "name": "Lily System analyzer"
+                    },
+                    {
+                        "id": "047C-0001",
+                        "slot": 1,
+                        "name": "Lily System Controller module"
+                    }
+                ]
             }
-        ]
+        )
         self._event_handler(copy.deepcopy(self._racks))
         while not self._stop_event.is_set():
             time.sleep(0.1)
