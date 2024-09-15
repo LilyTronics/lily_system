@@ -7,20 +7,21 @@ import wx
 
 class ViewMain(wx.Frame):
 
-    _GAP = 10
+    _GAP = 5
     _MIN_WINDOW_SIZE = (900, 600)
+    _TREE_WIDTH = 300
 
     def __init__(self, title):
         super().__init__(None, wx.ID_ANY, title)
         panel = wx.Panel(self)
         box = wx.BoxSizer(wx.HORIZONTAL)
-        box.Add(self._create_tree(panel), 30, wx.EXPAND | wx.ALL, self._GAP)
-        box.Add(self._create_notebook(panel), 70, wx.EXPAND | wx.ALL, self._GAP)
+        box.Add(self._create_tree(panel), 0, wx.EXPAND | wx.ALL, self._GAP)
+        box.Add(self._create_notebook(panel), 1, wx.EXPAND | wx.ALL, self._GAP)
         panel.SetSizer(box)
         self.SetInitialSize(self._MIN_WINDOW_SIZE)
 
     def _create_tree(self, parent):
-        self._tree = wx.TreeCtrl(parent)
+        self._tree = wx.TreeCtrl(parent, size=(self._TREE_WIDTH, -1))
         self._tree.AddRoot("Lily System\u2122")
         return self._tree
 
@@ -53,6 +54,7 @@ class ViewMain(wx.Frame):
 if __name__ == "__main__":
 
     app = wx.App(redirect=False)
+
     f = ViewMain("MainView Test")
     f.Show()
     # Populate tree with some racks and modules
@@ -67,4 +69,5 @@ if __name__ == "__main__":
     f.add_module("Rack (COM1)", "4 - Module 4")
     # Try to add a module for a not existing rack
     f.add_module("Rack (COM9)", "4 - Module 4")
+
     app.MainLoop()
