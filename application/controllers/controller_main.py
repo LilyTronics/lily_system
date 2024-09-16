@@ -15,6 +15,7 @@ class ControllerMain:
         self._view.Show()
 
         self._view.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self._on_tree_item_activate, id=self._view.ID_TREE)
+
         self._lily_system = LilySystem(self._on_lily_system_event)
 
     def _on_lily_system_event(self, racks):
