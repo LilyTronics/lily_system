@@ -5,27 +5,45 @@ Main view of the application
 import wx
 
 
-class ViewMain(wx.Frame):
+class ViewMain(wx.MDIParentFrame):
 
-    ID_TREE = 100
+    ID_MENU_EXIT = 100
+    ID_TREE = 200
 
     _GAP = 5
-    _MIN_WINDOW_SIZE = (900, 600)
+    _MIN_WINDOW_SIZE = (1000, 600)
     _TREE_WIDTH = 300
 
     def __init__(self, title):
         super().__init__(None, wx.ID_ANY, title)
-        panel = wx.Panel(self)
-        box = wx.BoxSizer(wx.HORIZONTAL)
-        box.Add(self._create_tree(panel), 0, wx.EXPAND | wx.ALL, self._GAP)
-        box.Add(self._create_notebook(panel), 1, wx.EXPAND | wx.ALL, self._GAP)
-        panel.SetSizer(box)
+
+        self._create_menu()
+        self._create_tree()
+
+        # panel = wx.Panel(self)
+        # box = wx.BoxSizer(wx.HORIZONTAL)
+        # box.Add(self._create_tree(panel), 0, wx.EXPAND | wx.ALL, self._GAP)
+        # box.Add(self._create_notebook(panel), 1, wx.EXPAND | wx.ALL, self._GAP)
+        # panel.SetSizer(box)
         self.SetInitialSize(self._MIN_WINDOW_SIZE)
 
-    def _create_tree(self, parent):
-        self._tree = wx.TreeCtrl(parent, self.ID_TREE, size=(self._TREE_WIDTH, -1))
+        self.Bind(wx.EVT_MENU, self._on_menu_exit, id=self.ID_MENU_EXIT)
+        self.Bind(wx.EVT_SIZE, self._on_window_resize)
+
+    def _create_menu(self):
+        menu = wx.Menu()
+        menu.Append(self.ID_MENU_EXIT, "E&xit")
+        menubar = wx.MenuBar()
+        menubar.Append(menu, "&File")
+        self.SetMenuBar(menubar)
+
+    def _create_tree(self):
+        tb = self.CreateToolBar(style=wx.TB_VERTICAL)
+        tb.SetToolBitmapSize((self._TREE_WIDTH, -1))
+
+        self._tree = wx.TreeCtrl(tb, self.ID_TREE, pos=(self._GAP, self._GAP))
         self._tree.AddRoot("Lily System\u2122")
-        return self._tree
+        tb.AddControl(self._tree)
 
     def _create_notebook(self, parent):
         self._notebook = wx.Notebook(parent)
@@ -37,6 +55,15 @@ class ViewMain(wx.Frame):
             if self._tree.GetItemText(item) == item_id:
                 return item
             item, cookie = self._tree.GetNextChild(self._tree.GetRootItem(), cookie)
+
+    def _on_menu_exit(self, event):
+        self.Close()
+        event.Skip()
+
+    def _on_window_resize(self, event):
+        tb_width, tb_height = self.GetToolBar().GetSize()
+        self._tree.SetSize((tb_width - (2 * self._GAP), tb_height - (2 * self._GAP)))
+        event.Skip()
 
     def add_rack(self, rack_id):
         root = self._tree.GetRootItem()
