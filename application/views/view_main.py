@@ -3,6 +3,7 @@ Main view of the application
 """
 
 import wx
+import wx.adv
 
 
 class ViewMain(wx.MDIParentFrame):
@@ -20,11 +21,6 @@ class ViewMain(wx.MDIParentFrame):
         self._create_menu()
         self._create_tree()
 
-        # panel = wx.Panel(self)
-        # box = wx.BoxSizer(wx.HORIZONTAL)
-        # box.Add(self._create_tree(panel), 0, wx.EXPAND | wx.ALL, self._GAP)
-        # box.Add(self._create_notebook(panel), 1, wx.EXPAND | wx.ALL, self._GAP)
-        # panel.SetSizer(box)
         self.SetInitialSize(self._MIN_WINDOW_SIZE)
 
         self.Bind(wx.EVT_MENU, self._on_menu_exit, id=self.ID_MENU_EXIT)
@@ -38,12 +34,14 @@ class ViewMain(wx.MDIParentFrame):
         self.SetMenuBar(menubar)
 
     def _create_tree(self):
-        tb = self.CreateToolBar(style=wx.TB_VERTICAL)
-        tb.SetToolBitmapSize((self._TREE_WIDTH, -1))
+        win = wx.adv.SashLayoutWindow(self, style=wx.NO_BORDER | wx.adv.SW_3D)
+        win.SetDefaultSize((self._TREE_WIDTH, -1))
+        win.SetOrientation(wx.adv.LAYOUT_VERTICAL)
+        win.SetAlignment(wx.adv.LAYOUT_LEFT)
+        win.SetExtraBorderSize(self._GAP)
 
-        self._tree = wx.TreeCtrl(tb, self.ID_TREE, pos=(self._GAP, self._GAP))
+        self._tree = wx.TreeCtrl(win, self.ID_TREE)
         self._tree.AddRoot("Lily System\u2122")
-        tb.AddControl(self._tree)
 
     def _create_notebook(self, parent):
         self._notebook = wx.Notebook(parent)
@@ -60,10 +58,8 @@ class ViewMain(wx.MDIParentFrame):
         self.Close()
         event.Skip()
 
-    def _on_window_resize(self, event):
-        tb_width, tb_height = self.GetToolBar().GetSize()
-        self._tree.SetSize((tb_width - (2 * self._GAP), tb_height - (2 * self._GAP)))
-        event.Skip()
+    def _on_window_resize(self, _event):
+        wx.adv.LayoutAlgorithm().LayoutMDIFrame(self)
 
     def add_rack(self, rack_id):
         root = self._tree.GetRootItem()
@@ -76,8 +72,7 @@ class ViewMain(wx.MDIParentFrame):
         rack_item = self._find_item(rack_id, root)
         if rack_item is not None:
             if self._find_item(module_id, rack_item) is None:
-                item = self._tree.AppendItem(rack_item, module_id, data=location)
-                # item.location = location
+                self._tree.AppendItem(rack_item, module_id, data=location)
         self._tree.ExpandAll()
 
     def get_item_data(self, item):
