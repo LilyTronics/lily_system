@@ -32,7 +32,7 @@ class ControllerMain:
             matches = list(filter(lambda r: r["port"] == location[0], self._lily_system.get_racks()))
             if len(matches) == 1:
                 matches = list(filter(lambda m: m["slot"] == location[1], matches[0]["modules"]))
-                print(matches)
+                print(location, matches)
         event.Skip()
 
 
