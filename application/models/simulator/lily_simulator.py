@@ -40,12 +40,9 @@ class LilySimulator:
             pos_stx = data.find(DataPacket.STX)
             pos_etx = data.find(DataPacket.ETX)
             if pos_stx != -1 and (pos_etx - pos_stx) >= 7:
-                data = data[pos_stx:pos_etx + 1]
-                crc = calculate_crc(data[1:-2])
-                if crc == data[-2]:
-                    responses = self._process_packet(data)
-                    for response in responses:
-                        connection.sendall(response)
+                responses = self._process_packet(data[pos_stx:pos_etx + 1])
+                for response in responses:
+                    connection.sendall(response)
         sock.close()
 
     def _process_packet(self, data):
