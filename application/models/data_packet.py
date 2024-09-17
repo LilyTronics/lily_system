@@ -8,32 +8,20 @@ Data max 35 bytes.
 Bytes stuffing using DLE.
 """
 
+from models.crc8 import calculate_crc
+
 
 class DataPacket:
 
     STX = 0x02
     ETX = 0x04
     DLE = 0x20
-    CRC_POLY = 0x07
 
     def __init__(self):
         self.dsn = 0
         self.ssn = 0
         self.pid = 0
         self.command = 0
-
-    def _calculate_crc(self, data_bytes):
-        crc = 0
-        for byte in data_bytes:
-            crc ^= byte
-            for _i in range(8):
-                if (crc & 0x80) > 0:
-                    crc <<= 1
-                    crc ^= self.CRC_POLY
-                else:
-                    crc <<= 1
-                crc &= 0xFF
-        return crc
 
     def _apply_byte_stuffing(self, data_bytes):
         stuffed_data = []
@@ -53,7 +41,7 @@ class DataPacket:
             self.pid & 0xFF,
             self.command
         ]
-        crc = self._calculate_crc(data)
+        crc = calculate_crc(data)
         data.append(crc)
         data = self._apply_byte_stuffing(data)
         return bytes([self.STX]) + bytes(data) + bytes([self.ETX])
