@@ -1,6 +1,6 @@
 # PyCharm stuff
-/**/.idea/*
-/**/.venv/*
+/.idea/*
 
 # Python stuff
+/.venv/*
 *.pyc
