@@ -27,7 +27,10 @@ class RS485Driver:
     def __init__(self, serial_port, rx_callback):
         self._tx_queue = queue.Queue()
         self._rx_callback = rx_callback
-        self._serial = serial.Serial(serial_port, self.BAUD_RATE)
+        if serial_port.startswith("socket://"):
+            self._serial = serial.serial_for_url(serial_port, self.BAUD_RATE)
+        else:
+            self._serial = serial.Serial(serial_port, self.BAUD_RATE)
         self._stop_event = threading.Event()
         self._stop_event.clear()
         self._tr_thread = threading.Thread(target=self._transmit_receive)
