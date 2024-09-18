@@ -9,7 +9,6 @@ Data cannot be sent and received simultaneously.
 This is handled by the transmit and receive thread (tr_thread).
 When data is being received, this is handled first.
 If no data is being received, data is sent from the TX queue (if any)
-
 """
 
 import queue
@@ -23,6 +22,8 @@ from models.data_packet import DataPacket
 class RS485Driver:
 
     BAUD_RATE = 1000000
+    LOOP_DELAY_US = 300
+    RX_DELAY_US = 20
 
     def __init__(self, serial_port, rx_callback):
         self._tx_queue = queue.Queue()
@@ -37,35 +38,38 @@ class RS485Driver:
         self._tr_thread.daemon = True
         self._tr_thread.start()
 
+    @staticmethod
+    def _usleep(value):
+        start = time.perf_counter()
+        value = value / 1000000
+        while (time.perf_counter() - start) < value:
+            pass
+
     def _transmit_receive(self):
-        rx_state = 0
         rx_data = b""
         while not self._stop_event.is_set():
-            # Check for incoming bytes
-            if self._serial.in_waiting == 0:
+            if self._serial.in_waiting > 0:
+                while self._serial.in_waiting > 0:
+                    rx_data += self._serial.read(self._serial.in_waiting)
+                    while True:
+                        stx_pos = rx_data.find(DataPacket.STX)
+                        if stx_pos >= 0:
+                            rx_data = rx_data[stx_pos:]
+                        else:
+                            break
+                        etx_pos = rx_data.find(DataPacket.ETX)
+                        if etx_pos > 0:
+                            self._rx_callback(rx_data[:etx_pos + 1])
+                            rx_data = rx_data[etx_pos + 1:]
+                    self._usleep(self.RX_DELAY_US)
+            else:
                 # No bytes waiting, sending data if any
                 try:
-                    tx_data = self._tx_queue.get_nowait()
-                    self._serial.write(tx_data)
+                    self._serial.write(self._tx_queue.get_nowait())
                 except queue.Empty:
                     pass
-            else:
-                while self._serial.in_waiting > 0:
-                    data_byte = self._serial.read(1)
-                    if rx_state == 0 and ord(data_byte) == DataPacket.STX:
-                        rx_state += 1
-                        rx_data = b""
-                    elif rx_state == 1:
-                        if ord(data_byte) == DataPacket.ETX:
-                            self._rx_callback(rx_data)
-                            rx_state = 0
-                        elif ord(data_byte) == DataPacket.STX:
-                            # Something went wrong
-                            rx_state = 0
-                        else:
-                            rx_data += data_byte
-                    else:
-                        rx_state = 0
+
+            self._usleep(self.LOOP_DELAY_US)
 
     def send_data(self, data):
         self._tx_queue.put(data)
@@ -79,6 +83,9 @@ class RS485Driver:
 
 if __name__ == "__main__":
 
+    def _rx_callback(data):
+        print("RX:", " ".join(map(lambda c: f"0x{c:02X}", data)))
+
     _serial_port = "COM4"
     packet = DataPacket()
     packet.dsn = 1
@@ -86,12 +93,14 @@ if __name__ == "__main__":
     packet.pid = 0x0305
     packet.command = 5
 
-    rs485 = RS485Driver(_serial_port, print)
+    rs485 = RS485Driver(_serial_port, _rx_callback)
 
-    for i in range(4):
+    for i in range(2):
         packet.command += 1
-        rs485.send_data(packet.get_data())
+        tx_data = packet.get_data()
+        print("TX:", " ".join(map(lambda c: f"0x{c:02X}", tx_data)))
+        rs485.send_data(tx_data)
 
-    time.sleep(2)
+    time.sleep(1)
 
     rs485.close()
