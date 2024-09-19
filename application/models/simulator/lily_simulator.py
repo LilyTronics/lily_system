@@ -57,10 +57,10 @@ if __name__ == "__main__":
     import time
 
     from models.rs485_driver import RS485Driver
-    from models.simulator.lily_module import LilyModule
+    from models.simulator.lily_module_cm import LilyModuleCM
 
     sim = LilySimulator(17000, [
-        LilyModule(1, b"\x04\x7C\x00\x01", "LS-CM Communication Module", "1A2B3C", "1.0")
+        LilyModuleCM(1, "1A2B3C")
     ])
 
     print("Connecting to the simulator")
