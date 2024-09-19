@@ -5,7 +5,6 @@ Simulates a rack with various modules.
 import socket
 import threading
 
-from models.crc8 import calculate_crc
 from models.data_packet import DataPacket
 
 
@@ -40,13 +39,11 @@ class LilySimulator:
             pos_stx = data.find(DataPacket.STX)
             pos_etx = data.find(DataPacket.ETX)
             if pos_stx != -1 and (pos_etx - pos_stx) >= 7:
-                responses = self._process_packet(data[pos_stx:pos_etx + 1])
-                for response in responses:
-                    connection.sendall(response)
+                for response in self._process_packet(data[pos_stx:pos_etx + 1]):
+                    connection.sendall(response.get_data())
         sock.close()
 
     def _process_packet(self, data):
-        # Processing packets can lead to multiple responses (e.g.: broadcast)
         responses = []
         for module in self._modules:
             response = module.process_packet(data)
@@ -60,8 +57,11 @@ if __name__ == "__main__":
     import time
 
     from models.rs485_driver import RS485Driver
+    from models.simulator.lily_module import LilyModule
 
-    sim = LilySimulator(17000, [])
+    sim = LilySimulator(17000, [
+        LilyModule(1, b"\x04\x7C\x00\x01", "LS-CM Communication Module", "1A2B3C", "1.0")
+    ])
 
     print("Connecting to the simulator")
     rs485 = RS485Driver("socket://localhost:17000", print)
@@ -70,8 +70,8 @@ if __name__ == "__main__":
     packet = DataPacket()
     packet.dsn = 0xFF
     packet.ssn = 0
-    packet.pid = 0x0001
-    packet.command = 1
+    packet.pid = 1
+    packet.data = [1]
     print("Send data")
     rs485.send_data(packet.get_data())
 
