@@ -35,6 +35,12 @@ class DataPacket:
         output += f"Bytes: {self.get_data()}"
         return output
 
+    def _init_packet(self):
+        self.dsn = 0
+        self.ssn = 0
+        self.pid = 0
+        self.data = []
+
     @staticmethod
     def _represent(data):
         hex_output = []
@@ -72,12 +78,14 @@ class DataPacket:
         return unstuffed_data
 
     def from_data(self, data):
+        self._init_packet()
         if data[0] == self.STX and data[-1] == self.ETX and len(data) >= self.MIN_PACKET_SIZE:
             data = self._remove_byte_stuffing(data[1:-1])
-            self.dsn = data[0]
-            self.ssn = data[1]
-            self.pid = data[2] * 256 + data[3]
-            self.data = data[4:-1]
+            if calculate_crc(data[:-1]) == data[-1]:
+                self.dsn = data[0]
+                self.ssn = data[1]
+                self.pid = data[2] * 256 + data[3]
+                self.data = data[4:-1]
 
     def get_data(self):
         data = [
