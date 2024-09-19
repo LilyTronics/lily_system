@@ -31,8 +31,7 @@ class DataPacket:
         output += f"DSN  : {self.dsn}\n"
         output += f"SSN  : {self.ssn}\n"
         output += f"PID  : {self.pid}\n"
-        output += f"Data : {self._represent(self.data)}\n"
-        output += f"Bytes: {self.get_data()}"
+        output += f"Data : {self._represent(self.data)}"
         return output
 
     def _init_packet(self):
