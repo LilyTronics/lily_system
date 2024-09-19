@@ -38,6 +38,10 @@ class ControllerMain:
 
 if __name__ == "__main__":
 
+    from models.simulator.run_simulator import run_simulators
+
+    run_simulators()
+
     app = wx.App(redirect=False)
     ControllerMain("ControllerMain Test")
     app.MainLoop()
