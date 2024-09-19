@@ -61,6 +61,8 @@ class RS485Driver:
                         if etx_pos > 0:
                             self._rx_callback(rx_data[:etx_pos + 1])
                             rx_data = rx_data[etx_pos + 1:]
+                        else:
+                            break
                     self._usleep(self.RX_DELAY_US)
             else:
                 # No bytes waiting, sending data if any
