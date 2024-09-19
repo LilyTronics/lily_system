@@ -73,6 +73,9 @@ class RS485Driver:
 
             self._usleep(self.LOOP_DELAY_US)
 
+    def get_port(self):
+        return self._serial.port
+
     def send_data(self, data):
         self._tx_queue.put(data)
 
@@ -96,7 +99,7 @@ if __name__ == "__main__":
     packet.command = 5
 
     rs485 = RS485Driver(_serial_port, _rx_callback)
-
+    print("Port:", rs485.get_port())
     for i in range(2):
         packet.command += 1
         tx_data = packet.get_data()
