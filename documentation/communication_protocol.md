@@ -125,10 +125,11 @@ The specific commands are one byte and have a range of 0x33...0xFF (maximum of 2
 
 Below are the module IDs and names stated for the LilyTronics modules.
 
-| Module ID  | Module name                |
-|------------|----------------------------|
-| 047C-0001  | LS-CM Communication Module |
-
+| Module ID | Module name                |
+|-----------|----------------------------|
+| 047C-0001 | LS-CM Communication Module |
+|           |                            |
+| 047C-FFFF | Special test board         |
 
 
 © 2024 LilyTronics
