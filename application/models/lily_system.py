@@ -16,9 +16,16 @@ from models.simulator.simulators import Simulators
 class LilySystem:
 
     _racks = []
-    _module_detect_interval = 5     # seconds
-    _loop_interval = 0.1            # seconds
+    _module_detect_interval = 5
+    _loop_interval = 0.1
+    _packet_timeout = 5
 
+    _packet_id_ranges = (
+        # Normal packets (63k)
+        (0x0001, 0xFBFF),
+        # Module detection (1k)
+        (0xFC00, 0xFFFF)
+    )
     # {
     #     "port": "COM3",
     #     "modules": [
@@ -35,27 +42,30 @@ class LilySystem:
     #     ]
     # }
 
-    def __init__(self, event_handler):
-        self._event_handler = event_handler
+    def __init__(self, rack_update_event):
+        self._rack_update_event = rack_update_event
         self._lock = threading.RLock()
         self._stop_event = threading.Event()
-        self._thread = threading.Thread(target=self._run)
-        self._thread.daemon = True
-        self._thread.start()
-        self._packet_id = 1
+        self._detection_thread = threading.Thread(target=self._module_detection)
+        self._detection_thread.daemon = True
+        self._detection_thread.start()
+        self._packet_id = self._packet_id_ranges[0][0]
+        self._packet_detection_id = self._packet_id_ranges[1][0]
         self._send_packets = []
 
     def __del__(self):
-        if self._thread.is_alive():
+        if self._detection_thread.is_alive():
             self._stop_event.set()
-            self._thread.join()
+            self._detection_thread.join()
 
     def _handle_rx_packet(self, data):
         packet = DataPacket()
         packet.from_data(data)
-        for port, send_packet in self._send_packets:
-            if packet.pid == send_packet.pid:
-                self._event_handler("Response from " + port)
+        with self._lock:
+            for port, send_packet, timestamp in self._send_packets:
+                if packet.pid == send_packet.pid:
+                    # Check if the packet is from a detection
+                    self._rack_update_event(port)
 
     def _send_module_detection(self, port):
         # We need the ID and the name
@@ -63,17 +73,20 @@ class LilySystem:
         packet.dsn = 0xFF
         packet.ssn = 0
         packet.data = [1]
-        packet.pid = self._packet_id
+        packet.pid = self._packet_detection_id
         port.send_data(packet.get_data())
-        self._send_packets.append((port.get_port(), copy.deepcopy(packet)))
-        self._packet_id += 1
+        with self._lock:
+            self._send_packets.append((port.get_port(), copy.deepcopy(packet), time.time()))
+        self._packet_detection_id += 1
+        if self._packet_detection_id > self._packet_id_ranges[1][1]:
+            self._packet_detection_id = self._packet_id_ranges[1][0]
 
-    def _run(self):
+    def _module_detection(self):
         open_ports = []
         if Simulators.is_running():
             try:
-                open_ports.append(RS485Driver("socket://localhost:17000", self._handle_rx_packet))
-                open_ports.append(RS485Driver("socket://localhost:17001", self._handle_rx_packet))
+                for port in Simulators.PORTS:
+                    open_ports.append(RS485Driver(f"socket://localhost:{port}", self._handle_rx_packet))
             except (Exception, ):
                 pass
         t_detect = 5
@@ -95,7 +108,11 @@ class LilySystem:
 
 if __name__ == "__main__":
 
+    def _rack_update(racks):
+        print("Rack update:")
+        print(racks)
+
     Simulators.run()
 
-    lily_system = LilySystem(print)
+    lily_system = LilySystem(_rack_update)
     time.sleep(7)
