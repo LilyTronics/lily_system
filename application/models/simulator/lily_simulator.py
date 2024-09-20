@@ -51,6 +51,9 @@ class LilySimulator:
                 responses.append(response)
         return responses
 
+    def is_running(self):
+        return self._thread.is_alive()
+
 
 if __name__ == "__main__":
 
@@ -62,6 +65,7 @@ if __name__ == "__main__":
     sim = LilySimulator(17000, [
         LilyModuleCM(1, "1A2B3C")
     ])
+    print("Running:", sim.is_running())
 
     print("Connecting to the simulator")
     rs485 = RS485Driver("socket://localhost:17000", print)

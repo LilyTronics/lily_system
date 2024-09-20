@@ -38,9 +38,9 @@ class ControllerMain:
 
 if __name__ == "__main__":
 
-    from models.simulator.run_simulator import run_simulators
+    from models.simulator.simulators import Simulators
 
-    run_simulators()
+    Simulators.run()
 
     app = wx.App(redirect=False)
     ControllerMain("ControllerMain Test")

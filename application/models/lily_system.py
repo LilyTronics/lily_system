@@ -10,6 +10,7 @@ import time
 
 from models.data_packet import DataPacket
 from models.rs485_driver import RS485Driver
+from models.simulator.simulators import Simulators
 
 
 class LilySystem:
@@ -69,11 +70,12 @@ class LilySystem:
 
     def _run(self):
         open_ports = []
-        try:
-            open_ports.append(RS485Driver("socket://localhost:17000", self._handle_rx_packet))
-            open_ports.append(RS485Driver("socket://localhost:17001", self._handle_rx_packet))
-        except (Exception, ):
-            pass
+        if Simulators.is_running():
+            try:
+                open_ports.append(RS485Driver("socket://localhost:17000", self._handle_rx_packet))
+                open_ports.append(RS485Driver("socket://localhost:17001", self._handle_rx_packet))
+            except (Exception, ):
+                pass
         t_detect = 5
         while not self._stop_event.is_set():
             # Module detection
@@ -93,9 +95,7 @@ class LilySystem:
 
 if __name__ == "__main__":
 
-    from models.simulator.run_simulator import run_simulators
-
-    run_simulators()
+    Simulators.run()
 
     lily_system = LilySystem(print)
     time.sleep(7)

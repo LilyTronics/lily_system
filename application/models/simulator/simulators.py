@@ -6,13 +6,29 @@ from models.simulator.lily_module_cm import LilyModuleCM
 from models.simulator.lily_simulator import LilySimulator
 
 
-def run_simulators():
-    LilySimulator(17000, [
-        LilyModuleCM(1, "100001")
-    ])
-    LilySimulator(17001, [
-        LilyModuleCM(1, "100002")
-    ])
+class Simulators:
+
+    _simulators = []
+
+    @classmethod
+    def run(cls):
+        cls._simulators.append(
+            LilySimulator(17000, [
+                LilyModuleCM(1, "100001")
+            ])
+        )
+        cls._simulators.append(
+            LilySimulator(17001, [
+                LilyModuleCM(1, "100002")
+            ])
+        )
+
+    @classmethod
+    def is_running(cls):
+        running = False
+        if len(cls._simulators) > 0:
+            running = False not in list(map(lambda s: s.is_running(), cls._simulators))
+        return running
 
 
 if __name__ == "__main__":
@@ -22,7 +38,8 @@ if __name__ == "__main__":
     from models.data_packet import DataPacket
     from models.rs485_driver import RS485Driver
 
-    run_simulators()
+    Simulators.run()
+    print("Running:", Simulators.is_running())
 
     print("Connecting to the simulator")
     ports = [
