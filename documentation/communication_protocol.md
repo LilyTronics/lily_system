@@ -12,16 +12,15 @@ The bus can work with most USB to RS485 converters (like FTDI USB-RS485).
 The communication module from LilyTronics (LS-CM) is provided with such an interface.
 The following settings apply:
 
-| Parameter    | Value   |
-|--------------|---------|
-| Baud rate    | 1 MBaud |
-| Data bits    | 8       |
-| Parity       | None    |
-| Stop bits    | 1       |
-| Flow control | Off     |
+| Parameter    | Value |
+|--------------|-------|
+| Baud rate    | tbd   |
+| Data bits    | 8     |
+| Parity       | None  |
+| Stop bits    | 1     |
+| Flow control | Off   |
 
-With the given speed sending one byte takes 10us.
-A maximum speed of 100000 bytes per second can be reached.
+The maximum baud rate needs to be determined.
 
 
 ## Slot numbers
