@@ -21,7 +21,7 @@ from models.data_packet import DataPacket
 
 class RS485Driver:
 
-    BAUD_RATE = 1000000
+    BAUD_RATE = 250000
     LOOP_DELAY_US = 300
     RX_DELAY_US = 20
 
