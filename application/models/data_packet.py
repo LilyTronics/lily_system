@@ -10,6 +10,8 @@ Maximum packet size: 42
 Bytes stuffing using DLE.
 """
 
+import struct
+
 from models.crc8 import calculate_crc
 
 
@@ -19,6 +21,9 @@ class DataPacket:
     ETX = 0x04
     DLE = 0x20
     MIN_PACKET_SIZE = 8
+
+    # Upper case is unsigned, lower case is signed
+    _BYTES_TO_FORMAT = {1: "B", 2: "H", 4: "I", 8: "Q"}
 
     def __init__(self):
         self.dsn = 0
@@ -40,17 +45,12 @@ class DataPacket:
         self.pid = 0
         self.data = []
 
-    @staticmethod
-    def _represent(data):
-        hex_output = []
-        ascii_output = ""
+    def _represent(self, data):
+        output = ""
         for byte in data:
-            hex_output.append(f"0x{byte:02X}")
-            if 31 < byte < 127:
-                ascii_output += chr(byte)
-            else:
-                ascii_output += "."
-        return f"{" ".join(hex_output)} - {ascii_output}"
+            output += f"0x{byte:02X} "
+        output += f"- {self.convert_data_to_string()}"
+        return output
 
     def _apply_byte_stuffing(self, data):
         stuffed_data = []
@@ -101,6 +101,21 @@ class DataPacket:
         data.append(self.ETX)
         return bytes(data)
 
+    def convert_data_to_number(self, n_bytes=8, offset=0, signed=False):
+        if n_bytes > len(self.data):
+            n_bytes = len(self.data)
+        frmt = self._BYTES_TO_FORMAT[n_bytes]
+        if signed:
+            frmt = frmt.lower()
+        return struct.unpack(">" + frmt, bytes(self.data[offset:offset + n_bytes]))[0]
+
+    def convert_data_to_string(self, ascii_only=True):
+        data = self.data.copy()
+        if ascii_only:
+            for i in range(len(data)):
+                data[i] = data[i] if 31 < data[i] < 127 else 46
+        return bytes(data).decode("latin-1")
+
 
 if __name__ == "__main__":
 
@@ -113,3 +128,15 @@ if __name__ == "__main__":
 
     packet.from_data(b"\x02\x01\x03\x05\x06\x07\x11 \xdf\x89\x04")
     print(packet)
+
+    packet.data = [0xFF, 0xC8, 0x00, 0xA2]
+    print(packet)
+    print("Data as number, all bytes,    unsigned (4291297442):", packet.convert_data_to_number())
+    print("Data as number, all bytes,    signed   (  -3669854):", packet.convert_data_to_number(signed=True))
+    print("Data as number, byte 1 and 2, signed   (     51200):", packet.convert_data_to_number(2, 1))
+    print("Data as number, byte 1 and 2, unsigned (    -14336):", packet.convert_data_to_number(2, 1, True))
+
+    packet.data = [76, 105, 108, 121, 84, 114, 111, 110, 105, 99, 115, 31, 127]
+    print(packet)
+    print("Data as string, ASCII only:", packet.convert_data_to_string())
+    print("Data as string, as is     :", packet.convert_data_to_string(False))
