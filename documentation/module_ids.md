@@ -19,7 +19,7 @@ For readability, in the application, a '-' is placed between the two parts.
 | 047C-FFFF | Special test board         |
 
 
-## Manufacturers codes
+## Manufacturer codes
 
 | Code | Manufacturer |
 |------|--------------|
