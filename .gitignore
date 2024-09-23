@@ -8,3 +8,6 @@ sandbox.py
 
 # Test settings, they are PC dependent
 /unit_tests/test_settings.json
+
+# Test reports
+/unit_tests/test_reports/*
