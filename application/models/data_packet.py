@@ -12,7 +12,7 @@ Bytes stuffing using DLE.
 
 import struct
 
-from models.crc8 import calculate_crc
+from application.models.crc8 import calculate_crc
 
 
 class DataPacket:
@@ -24,6 +24,9 @@ class DataPacket:
 
     # Upper case is unsigned, lower case is signed
     _BYTES_TO_FORMAT = {1: "B", 2: "H", 4: "I", 8: "Q"}
+
+    # We use the original IBM character encoding
+    _ENCODING = "cp437"
 
     def __init__(self):
         self.dsn = 0
@@ -55,7 +58,7 @@ class DataPacket:
     def _apply_byte_stuffing(self, data):
         stuffed_data = []
         for byte in data:
-            if byte in [ self.STX, self.ETX, self.DLE]:
+            if byte in [self.STX, self.ETX, self.DLE]:
                 stuffed_data.append(self.DLE)
                 stuffed_data.append(~byte & 0xFF)
             else:
@@ -76,67 +79,61 @@ class DataPacket:
                 unstuffed_data.append(byte)
         return unstuffed_data
 
-    def from_data(self, data):
+    def from_data(self, data_bytes):
         self._init_packet()
-        if data[0] == self.STX and data[-1] == self.ETX and len(data) >= self.MIN_PACKET_SIZE:
-            data = self._remove_byte_stuffing(data[1:-1])
-            if calculate_crc(data[:-1]) == data[-1]:
-                self.dsn = data[0]
-                self.ssn = data[1]
-                self.pid = data[2] * 256 + data[3]
-                self.data = data[4:-1]
+        if data_bytes[0] == self.STX and data_bytes[-1] == self.ETX and len(data_bytes) >= self.MIN_PACKET_SIZE:
+            data_bytes = self._remove_byte_stuffing(data_bytes[1:-1])
+            if calculate_crc(data_bytes[:-1]) == data_bytes[-1]:
+                self.dsn = data_bytes[0]
+                self.ssn = data_bytes[1]
+                self.pid = data_bytes[2] * 256 + data_bytes[3]
+                self.data = data_bytes[4:-1]
 
     def get_data(self):
-        data = [
-            self.dsn,
-            self.ssn,
-            (self.pid >> 8) & 0xFF,
-            self.pid & 0xFF,
-        ]
-        data.extend(self.data)
-        crc = calculate_crc(data)
-        data.append(crc)
-        data = self._apply_byte_stuffing(data)
-        data.insert(0, self.STX)
-        data.append(self.ETX)
-        return bytes(data)
+        data_bytes = []
+        if (1 <= self.dsn <= 255 and 0 <= self.ssn <= 255 and self.dsn != self.ssn and
+                1 <= self.pid <= 65535 and 1 <= len(self.data) <= 35):
+            data_bytes.extend([
+                self.dsn,
+                self.ssn,
+                (self.pid >> 8) & 0xFF,
+                self.pid & 0xFF,
+            ])
+            data_bytes.extend(self.data)
+            crc = calculate_crc(data_bytes)
+            data_bytes.append(crc)
+            data_bytes = self._apply_byte_stuffing(data_bytes)
+            data_bytes.insert(0, self.STX)
+            data_bytes.append(self.ETX)
+        return bytes(data_bytes)
 
-    def convert_data_to_number(self, n_bytes=8, offset=0, signed=False):
-        if n_bytes > len(self.data):
-            n_bytes = len(self.data)
-        frmt = self._BYTES_TO_FORMAT[n_bytes]
+    def convert_data_to_number(self, n_bytes=0, offset=0, signed=False):
+        if n_bytes == 0 or n_bytes > len(self.data):
+            data_bytes = self.data[offset:]
+        else:
+            data_bytes = self.data[offset:offset + n_bytes]
+        if len(data_bytes) > 8:
+            raise Exception(f"Amount of bytes too big (> 8): {len(data_bytes)}")
+        while len(data_bytes) not in [1, 2, 4, 8]:
+            if signed:
+                data_bytes.insert(0, 255)
+            else:
+                data_bytes.insert(0, 0)
+        frmt = self._BYTES_TO_FORMAT[len(data_bytes)]
         if signed:
             frmt = frmt.lower()
-        return struct.unpack(">" + frmt, bytes(self.data[offset:offset + n_bytes]))[0]
+        return struct.unpack(">" + frmt, bytes(data_bytes))[0]
 
     def convert_data_to_string(self, ascii_only=True):
         data = self.data.copy()
         if ascii_only:
             for i in range(len(data)):
                 data[i] = data[i] if 31 < data[i] < 127 else 46
-        return bytes(data).decode("latin-1")
+        return bytes(data).decode(self._ENCODING)
 
 
 if __name__ == "__main__":
 
-    packet = DataPacket()
-    packet.dsn = 1
-    packet.ssn = 3
-    packet.pid = 0x0506
-    packet.data = [0x07, 0x11, 0x20]
-    print(packet)
+    from unit_tests.models.test_data_packet import TestDataPacket
 
-    packet.from_data(b"\x02\x01\x03\x05\x06\x07\x11 \xdf\x89\x04")
-    print(packet)
-
-    packet.data = [0xFF, 0xC8, 0x00, 0xA2]
-    print(packet)
-    print("Data as number, all bytes,    unsigned (4291297442):", packet.convert_data_to_number())
-    print("Data as number, all bytes,    signed   (  -3669854):", packet.convert_data_to_number(signed=True))
-    print("Data as number, byte 1 and 2, signed   (     51200):", packet.convert_data_to_number(2, 1))
-    print("Data as number, byte 1 and 2, unsigned (    -14336):", packet.convert_data_to_number(2, 1, True))
-
-    packet.data = [76, 105, 108, 121, 84, 114, 111, 110, 105, 99, 115, 31, 127]
-    print(packet)
-    print("Data as string, ASCII only:", packet.convert_data_to_string())
-    print("Data as string, as is     :", packet.convert_data_to_string(False))
+    TestDataPacket().run(True)
