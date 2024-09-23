@@ -21,8 +21,6 @@ def calculate_crc(data_bytes):
 
 if __name__ == "__main__":
 
-    data = b""
-    for i in range(10):
-        data += i.to_bytes(1)
-    print(f"Data: {data}")
-    print(f"CRC : 0x{calculate_crc(data):X}")
+    from unit_tests.models.test_crc8 import TestCrc8
+
+    TestCrc8().run(True)
