@@ -2,7 +2,7 @@
 LS-CM Communication module.
 """
 
-from models.simulator.lily_module import LilyModule
+from application.models.simulator.lily_module import LilyModule
 
 
 class LilyModuleCM(LilyModule):

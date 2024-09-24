@@ -2,8 +2,8 @@
 Run the simulators
 """
 
-from models.simulator.lily_module_cm import LilyModuleCM
-from models.simulator.lily_simulator import LilySimulator
+from application.models.simulator.lily_module_cm import LilyModuleCM
+from application.models.simulator.lily_simulator import LilySimulator
 
 
 class Simulators:

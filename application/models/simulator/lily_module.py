@@ -2,7 +2,7 @@
 Base class for a module.
 """
 
-from models.data_packet import DataPacket
+from application.models.data_packet import DataPacket
 
 
 class LilyModule:
