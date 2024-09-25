@@ -81,7 +81,7 @@ class DataPacket:
 
     def from_data(self, data_bytes):
         self._init_packet()
-        if data_bytes[0] == self.STX and data_bytes[-1] == self.ETX and len(data_bytes) >= self.MIN_PACKET_SIZE:
+        if len(data_bytes) >= self.MIN_PACKET_SIZE and data_bytes[0] == self.STX and data_bytes[-1] == self.ETX:
             data_bytes = self._remove_byte_stuffing(data_bytes[1:-1])
             if calculate_crc(data_bytes[:-1]) == data_bytes[-1]:
                 self.dsn = data_bytes[0]
