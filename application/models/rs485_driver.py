@@ -17,6 +17,7 @@ import threading
 import time
 
 from application.models.data_packet import DataPacket
+from application.models.tcp_client import TCPClient
 
 
 class RS485Driver:
@@ -29,7 +30,8 @@ class RS485Driver:
         self._tx_queue = queue.Queue()
         self._rx_callback = rx_callback
         if serial_port.startswith("socket://"):
-            self._serial = serial.serial_for_url(serial_port, self.BAUD_RATE)
+            host, port = serial_port[9:].split(":")
+            self._serial = TCPClient(host, port)
         else:
             self._serial = serial.Serial(serial_port, self.BAUD_RATE)
         self._stop_event = threading.Event()
