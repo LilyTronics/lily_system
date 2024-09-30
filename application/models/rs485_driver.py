@@ -16,7 +16,7 @@ import serial
 import threading
 import time
 
-from models.data_packet import DataPacket
+from application.models.data_packet import DataPacket
 
 
 class RS485Driver:

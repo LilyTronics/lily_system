@@ -23,4 +23,4 @@ if __name__ == "__main__":
 
     from unit_tests.models.test_crc8 import TestCrc8
 
-    TestCrc8().run(True)
+    TestCrc8().run()

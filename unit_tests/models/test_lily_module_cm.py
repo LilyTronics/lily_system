@@ -73,4 +73,4 @@ class TestLilyModuleCm(lily_unit_test.TestSuite):
 
 if __name__ == "__main__":
 
-    TestLilyModuleCm().run(True)
+    TestLilyModuleCm().run()

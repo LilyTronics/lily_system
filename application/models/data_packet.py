@@ -136,4 +136,4 @@ if __name__ == "__main__":
 
     from unit_tests.models.test_data_packet import TestDataPacket
 
-    TestDataPacket().run(True)
+    TestDataPacket().run()
