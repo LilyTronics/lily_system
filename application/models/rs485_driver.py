@@ -31,7 +31,7 @@ class RS485Driver:
         self._rx_callback = rx_callback
         if serial_port.startswith("socket://"):
             host, port = serial_port[9:].split(":")
-            self._serial = TCPClient(host, port)
+            self._serial = TCPClient(host, int(port))
         else:
             self._serial = serial.Serial(serial_port, self.BAUD_RATE)
         self._stop_event = threading.Event()
@@ -90,24 +90,6 @@ class RS485Driver:
 
 if __name__ == "__main__":
 
-    def _rx_callback(data):
-        print("RX:", " ".join(map(lambda c: f"0x{c:02X}", data)))
+    from unit_tests.models.test_rs485_driver import TestRS485Driver
 
-    _serial_port = "COM4"
-    packet = DataPacket()
-    packet.dsn = 1
-    packet.ssn = 0
-    packet.pid = 0x0305
-    packet.command = 5
-
-    rs485 = RS485Driver(_serial_port, _rx_callback)
-    print("Port:", rs485.get_port())
-    for i in range(2):
-        packet.command += 1
-        tx_data = packet.get_data()
-        print("TX:", " ".join(map(lambda c: f"0x{c:02X}", tx_data)))
-        rs485.send_data(tx_data)
-
-    time.sleep(1)
-
-    rs485.close()
+    TestRS485Driver().run()
