@@ -35,7 +35,6 @@ class TCPServer:
 
 if __name__ == "__main__":
 
-    from unit_tests.models.test_tcp_server import TestTCPServer
+    from unit_tests.models.test_tcp_client_server import TestTCPServer
 
     TestTCPServer().run()
-
