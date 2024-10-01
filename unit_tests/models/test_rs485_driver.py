@@ -40,6 +40,12 @@ class TestRS485Driver(lily_unit_test.TestSuite):
         self._tcp_server = TCPServer(self._HOST, self._PORT, self._tcp_callback)
         self._rs485_driver = RS485Driver(f"socket://{self._HOST}:{self._PORT}", self._rs485_callback)
 
+    def teardown(self):
+        if self._rs485_driver is not None:
+            self._rs485_driver.close()
+        if self._tcp_server is not None:
+            self._tcp_server.close()
+
     def test_loop_back(self):
         packet = DataPacket()
         packet.dsn = 2

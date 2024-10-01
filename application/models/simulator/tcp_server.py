@@ -24,14 +24,14 @@ class TCPServer:
         self.close()
 
     def _tcp_server(self):
-        # Create a socket for receiving and transmitting packages
         with socket.create_server((self._host, self._port)) as sock:
+            sock.settimeout(self._RX_TIME_OUT)
             while not self._stop_event.is_set():
                 try:
                     connection = sock.accept()[0]
                 except TimeoutError:
                     continue
-                while True:
+                while not self._stop_event.is_set():
                     data = connection.recv(self._BUFFER_SIZE)
                     if len(data) == 0:
                         break
