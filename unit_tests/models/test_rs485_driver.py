@@ -63,16 +63,27 @@ class TestRS485Driver(lily_unit_test.TestSuite):
         packet.dsn = 2
         packet.ssn = 1
         packet.data = [1]
-        for i in range(10):
+        for i in range(50):
             packet.pid = 1 + i
             tx_packets.append(copy.copy(packet))
-
+        self.log.debug("Sending packets at random interval")
         for packet in tx_packets:
-            self.sleep(random.uniform(0.1, 0.2))
+            self.sleep(random.uniform(0.05, 0.4))
             self._rs485_driver.send_data(packet.get_data())
 
+        self.log.debug("Check for received packets")
+        rx_packets = []
+        while len(rx_packets) < len(tx_packets):
+            try:
+                rx_packets.append(self._rx_queue.get(True, 1))
+            except queue.Empty:
+                self.fail("Not all packets received")
 
-
+        self.log.debug("Analyse received packets")
+        # Check if every send packet has a response
+        for tx_packet in tx_packets:
+            matches = list(filter(lambda x: x.pid == tx_packet.pid, rx_packets))
+            self.fail_if(len(matches) == 0, f"Packet with PID: {tx_packet.pid} has no response")
 
 
 if __name__ == "__main__":
