@@ -25,6 +25,10 @@ class TestTCPClientServer(lily_unit_test.TestSuite):
     def setup(self):
         self._tcp_server = TCPServer(self._HOST, self._PORT, self._packet_handler)
 
+    def teardown(self):
+        if self._tcp_server is not None:
+            self._tcp_server.close()
+
     def test_loop_back(self):
         c = TCPClient(self._HOST, self._PORT)
         c.write(self._TEST_DATA)
